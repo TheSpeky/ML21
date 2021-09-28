@@ -45,6 +45,22 @@ class PerceptronClassifier():
         bestw = w
         L = []
         ### YOUR CODE
+        besterr = float('inf')
+        for _ in range(maxiter):
+            hy = np.sign(np.dot(X, w))
+            bad = (hy != y).nonzero()[0]
+            if len(bad) < besterr:
+                bestw = w
+                besterr = len(bad)
+            if len(bad) == 0:
+                break
+            idx = np.random.choice(bad)
+            _x = X[idx]
+            _y = y[idx]
+            cur_score = (hy == y).mean()
+            L.append((w.copy(), _x.copy(), _y.copy(), cur_score))
+            w = w + _y * _x
+        L.append((w.copy(), None, None, (np.sign(np.dot(X, w))==y).mean()))
         ### END CODE
         self.w = bestw
         self.history = L
@@ -58,6 +74,7 @@ class PerceptronClassifier():
         """
         pred = None
         ### YOUR CODE HERE 1-2 lines
+        pred = np.sign(X@self.w)
         ### END CODE
         return pred
 
@@ -71,6 +88,7 @@ class PerceptronClassifier():
         """
         score = 0 
         ### YOUR CODE HERE 1-3 lines
+        score = (self.predict(X)==y).mean()
         ### END CODE
         return score
     
@@ -118,6 +136,12 @@ def make_hyperplane(w, ax):
     y = np.array((0, 1))
     
     ### YOUR CODE HERE 
+    if w[2] == 0:
+        x = np.array([-w[0]/w[1], -w[0]/w[1]])
+        y = np.array([ymin, ymax])
+    else:
+        x = np.array([xmin, xmax])    
+        y = (-w[0]-w[1]*x)/w[2]
     ### END CODE
     
     return x, y
@@ -148,6 +172,11 @@ def square_transform(X):
     Xt = X
 
     ### YOUR CODE HERE 2-4 lines
+    y = []
+    for i in range(len(X)):
+        y.append( (X[i,0]**2,  X[i,1]**2))
+
+    Xt = np.c_[np.ones((len(Xt),1)), y]
     ### END CODE 
     
     return Xt
@@ -168,6 +197,11 @@ def plot_contour(w, phi, ax):
     xs = ys = np.linspace(-1, 1, nsize)
     img = np.zeros((nsize, nsize)) # makes a 100 x 100 2d array
     ### YOUR CODE
+    for i in range(len(ys)):
+        for j in range(len(xs)):
+            x = xs[j]
+            y = ys[i]
+            img[i, j] = phi(np.c_[x, y]) @ w
     ### END CODE
     cont = ax.contour(xs, ys, img, [0], colors='r', linewidths=3)
     return cont
@@ -185,8 +219,17 @@ def poly_transform(X):
     Returns: 
       numpy arrays shape (n, d) 
     """
-    Xt = X
+    Xt = np.copy(X)
     ### YOUR CODE HERE
+    y = []
+    for x in range(len(X)):
+        v = []
+        for i in range(4):
+            for j in range(4):
+                if (i+j <= 3):
+                    v.append(X[x,0]**i * X[x, 1]**j)
+        y.append(v)
+    Xt = np.c_[y]
     ### END CODE
     return Xt
 
@@ -207,6 +250,18 @@ def plot_data():
     fig, axes = plt.subplots(1, 4, figsize=(12, 10))
     
     ### YOUR CODE 
+    X = D['X1']
+    y = D['y1']
+    axes[0].scatter(X[:,0], X[:,1], c=y, cmap=plt.cm.Paired, s=20)
+    X = D['X2']
+    y = D['y2']
+    axes[1].scatter(X[:,0], X[:,1], c=y, cmap=plt.cm.Paired, s=20) 
+    X = D['X3']
+    y = D['y3']
+    axes[2].scatter(X[:,0], X[:,1], c=y, cmap=plt.cm.Paired, s=20)
+    X = D['X4']
+    y = D['y4']
+    axes[3].scatter(X[:,0], X[:,1], c=y, cmap=plt.cm.Paired, s=20)
     ### END CODE
     plt.show()
 
@@ -333,6 +388,7 @@ class LinRegClassifier():
         """  
         w = np.zeros(X.shape[1])
         ### YOUR CODE HERE 1-3 lines
+        w = np.linalg.inv(X.T @ X) @ (np.dot(X.T, y))
         ### END CODE
         self.w =  w
 
@@ -345,6 +401,7 @@ class LinRegClassifier():
         """
         pred = None
         ### YOUR CODE HERE 1-2 lines
+        pred = X @ self.w.T
         ### END CODE
         return pred
 
@@ -358,6 +415,7 @@ class LinRegClassifier():
         """
         score = 0 
         ### YOUR CODE HERE 1-3 lines
+        score = ((self.predict(X)-y)**2).sum()
         ### END CODE
         return score
 
