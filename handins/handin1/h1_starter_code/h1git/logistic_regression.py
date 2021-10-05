@@ -13,7 +13,7 @@ def logistic(z):
        logi: numpy array shape (d,) each entry transformed by the logistic function 
     """
     logi = np.zeros(z.shape)
-    ### YOUR CODE HERE 1-5 lines
+    ### YOUR CODE HERE 1-5 lines.
     logi = 1 / (1+np.exp(-z))
     ### END CODE
     assert logi.shape == z.shape
